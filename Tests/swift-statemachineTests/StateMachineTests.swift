@@ -1,5 +1,5 @@
 import XCTest
-@testable import DaisieGateways
+@testable import swift_statemachine
 
 class StateMachineTests: XCTestCase {
 
@@ -22,22 +22,23 @@ class StateMachineTests: XCTestCase {
 	var stateMachine: StateMachine<TestState, TestEvent>?
 
     override func setUp() {
-		stateMachine = StateMachine<TestState, TestEvent>(state: .initial) { machine in
-			machine.addRoute(event: .initialToFirst, transition: .initial => .first)
-			machine.addRoute(event: .firstToSecond,
-							 route: StateMachine<TestState, TestEvent>.Route(
-								transition: .first => .second,
-								conditions: [ { transition in
-										return transition == Transition<TestState>(fromState: .first, toState: .second)
-									}, { _ in
-										return self.semaphore1
-									},
-									self.testCondition
-								])
-			)
-			machine.stateChangeHandler = self.onStateChange
-			machine.errorHandler = self.errorHandler
-		}
+        stateMachine = StateMachine<TestState, TestEvent>(initialState: .initial, initClosure:  { machine in
+            machine.addRoute(forEvent: .initialToFirst, transition: .initial => .first)
+            machine.addRoute(forEvent: .firstToSecond,
+                             route: StateMachine<TestState, TestEvent>.Route(
+                                transition: .first => .second,
+                                postBlock: nil,
+                                conditions: [ { transition in
+                                    return transition == Transition<TestState>(fromState: .first, toState: .second)
+                                }, { _ in
+                                    return self.semaphore1
+                                },
+                                self.testCondition
+                                ])
+            )
+            machine.stateChangeHandler = self.onStateChange
+            machine.errorHandler = self.errorHandler
+        })
 		stateMachine?.start()
 	}
 

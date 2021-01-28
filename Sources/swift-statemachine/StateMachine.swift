@@ -48,7 +48,7 @@ public final class StateMachine<S: State, E: Event> {
 	//--------------------------------------------------
 	// MARK: - Storage
 	//--------------------------------------------------
-	private(set) var state: S
+	public private(set) var state: S
 
 	private lazy var routes = [E: [Route]]()
 	public var stateChangeHandler: Handler? {
