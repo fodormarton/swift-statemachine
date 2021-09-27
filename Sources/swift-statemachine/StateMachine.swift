@@ -103,7 +103,7 @@ public final class StateMachine<S: State, E: Event> {
     }
 
     public func addRoute(forEvent event: E, transition: Transition<S>, postBlock: TransitionPostBlock? = nil, conditions: Conditions? = nil) {
-        addRoute(forEvent : event, route: Route(transition: transition, postBlock: postBlock, conditions: conditions))
+        addRoute(forEvent: event, route: Route(transition: transition, postBlock: postBlock, conditions: conditions))
 	}
 
 	public func addRoute(forEvent event: E, route: Route) {
