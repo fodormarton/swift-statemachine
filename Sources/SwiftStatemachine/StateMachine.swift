@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 public protocol State: Hashable, CaseIterable {}
 public protocol Event: Hashable {}
@@ -17,7 +18,7 @@ public struct Transition<S: State>: Hashable {
 	}
 }
 
-public final class StateMachine<S: State, E: Event> {
+public final class StateMachine<S: State, E: Event>: ObservableObject {
 
 	/// Closure for validating transition.
 	/// If condition returns `false`, transition will fail and associated handlers will not be invoked.
@@ -48,7 +49,8 @@ public final class StateMachine<S: State, E: Event> {
 	//--------------------------------------------------
 	// MARK: - Storage
 	//--------------------------------------------------
-	public private(set) var state: S
+	@Published public private(set) var state: S
+    private var previousState: S
 
 	private lazy var routes = [E: [Route]]()
 	public var stateChangeHandler: Handler? {
@@ -66,8 +68,9 @@ public final class StateMachine<S: State, E: Event> {
 	// MARK: - Init
 	//--------------------------------------------------
 
-	public init(initialState: S, stateChangeHandler: Handler? = nil, initClosure: ((StateMachine) -> Void)? = nil) {
+	public init(initialState: S, initClosure: ((StateMachine) -> Void)? = nil, stateChangeHandler: Handler? = nil) {
 		self.state = initialState
+        self.previousState = initialState
 		self.stateChangeHandler = stateChangeHandler
 		initClosure?(self)
         self.initialized = true
@@ -77,9 +80,10 @@ public final class StateMachine<S: State, E: Event> {
 		closure(self)
 	}
 
-    public func start() {
+    @discardableResult public func start() -> StateMachine {
 		started = true
         stateChangeHandler?(state, state, nil)
+        return self
     }
 
 	//--------------------------------------------------
@@ -88,6 +92,12 @@ public final class StateMachine<S: State, E: Event> {
 
     public func addRoutes(forEvent event: E, fromStates: [S], toState: S, postBlock: TransitionPostBlock? = nil, conditions: Conditions? = nil) {
         for fromState in fromStates {
+            addRoute(forEvent: event, fromState: fromState, toState: toState, postBlock: postBlock, conditions: conditions)
+        }
+    }
+
+    public func addRoutes(forEvent event: E, fromState: S, toStates: [S], postBlock: TransitionPostBlock? = nil, conditions: Conditions? = nil) {
+        for toState in toStates {
             addRoute(forEvent: event, fromState: fromState, toState: toState, postBlock: postBlock, conditions: conditions)
         }
     }
@@ -129,6 +139,8 @@ public final class StateMachine<S: State, E: Event> {
 
 	public func passingRouteForEvent(_ event: E) -> Route? {
 		guard let allRoutes = routes[event] else { return nil }
+        let matchingRoutes = allRoutes.filter { $0.isPassingConditions(fromState: state, toState: $0.transition.toState) }
+        if let previousStateRoute = matchingRoutes.first(where: { $0.transition.toState == previousState }) { return previousStateRoute }
 		return allRoutes.first(where: { $0.isPassingConditions(fromState: state, toState: $0.transition.toState) })
 	}
 

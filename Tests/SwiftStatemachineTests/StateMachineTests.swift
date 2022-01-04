@@ -1,5 +1,5 @@
 import XCTest
-@testable import swift_statemachine
+@testable import SwiftStatemachine
 
 class StateMachineTests: XCTestCase {
 

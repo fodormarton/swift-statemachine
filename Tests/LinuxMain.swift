@@ -1,6 +1,6 @@
 import XCTest
 
-import swift_statemachineTests
+import SwiftStatemachineTests
 
 var tests = [XCTestCaseEntry]()
 tests += StateMachineTests.allTests()
