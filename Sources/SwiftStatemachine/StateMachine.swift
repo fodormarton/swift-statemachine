@@ -18,6 +18,7 @@ public struct Transition<S: State>: Hashable {
 	}
 }
 
+@available(macOS 10.15, iOS 14.0, *)
 public final class StateMachine<S: State, E: Event>: ObservableObject {
 
 	/// Closure for validating transition.
@@ -55,7 +56,7 @@ public final class StateMachine<S: State, E: Event>: ObservableObject {
 	private lazy var routes = [E: [Route]]()
 	public var stateChangeHandler: Handler? {
 		didSet {
-            if initialized {
+            if initialized, started {
                 stateChangeHandler?(state, state, nil)
             }
 		}
@@ -82,7 +83,6 @@ public final class StateMachine<S: State, E: Event>: ObservableObject {
 
     @discardableResult public func start() -> StateMachine {
 		started = true
-        stateChangeHandler?(state, state, nil)
         return self
     }
 
