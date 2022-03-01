@@ -150,10 +150,13 @@ public final class StateMachine<S: State, E: Event>: ObservableObject {
 
         let fromState = state
 		if let route = passingRouteForEvent(event) {
-            state = route.transition.toState
-            route.postBlock?(event, fromState, state)
-            if triggerHandler {
-                stateChangeHandler?(fromState, state, userInfo)
+            let newState = route.transition.toState
+            if state != newState {
+                state = newState
+                route.postBlock?(event, fromState, state)
+                if triggerHandler {
+                    stateChangeHandler?(fromState, state, userInfo)
+                }
             }
 			return true
 		} else {
